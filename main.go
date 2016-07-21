@@ -7,21 +7,31 @@ import (
     "github.com/docker/engine-api/types"
     "golang.org/x/net/context"
     "flag" //importing flag package for command line flag parsing
+    "runtime"
     "os"
-    //"net/http"
 )
 
+var GLOBAL_HOSTNAME string
+var GLOBAL_INTERVAL string
 
 func main() {
     
-    
+    runtime.GOMAXPROCS(2)
+
     // Defined Input flags for parsing //
     modePtr := flag.String("mode","collectd/introscope","String detailing what mode arguments are needed")
     statsPtr := flag.String("stats","btrfs/cpu/memory/containerfs","String detailing what stats are needed")
     connPtr := flag.String("connect","unix/tcp","String detailing what mode to use to connect to docker daemon")
+    serverId := flag.String("serverid","Hostname","String detailing server hostname to be passed to script")
+    interval := flag.String("interval","Interval at which to execute the check again","Wait for interval seconds before running script again")
+
     // Parsing the flags //
     flag.Parse()
 
+    // Assigning values to the global variables //
+
+    GLOBAL_HOSTNAME = *serverId
+    GLOBAL_INTERVAL = *interval
     // Connect to docker daemon based on connection mode //
     var cli *client.Client
     var err error
@@ -56,10 +66,9 @@ func main() {
     if *statsPtr == "containerfs"{
         // Function call to find the biggest container //
         containerFsStats(containers,modePtr)
-    } else if *statsPtr == "cpu"{
+    } else if *statsPtr == "cpu" || *statsPtr == "mem"{
         // Function call to find container CPU stats
-    } else if *statsPtr == "mem"{
-        // Function call to find container memory stats
+        containerUsageStats(cli,containers,statsPtr,modePtr)
     } else if *statsPtr == "btrfs"{
         // Function call to find container memory stats
         btrfsStats(modePtr)

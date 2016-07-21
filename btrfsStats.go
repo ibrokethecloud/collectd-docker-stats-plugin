@@ -131,9 +131,19 @@ func btrfsStats (modePtr *string){
 
         btrfsInfo["total"] = tmpTotal*1024
         
-        fmt.Println(btrfsInfo)
-        
+        //fmt.Println(btrfsInfo)
+        //Check what is format of output needed and make the function call now!
 
+        if *modePtr == "collectd"{
+            collectdFormatter("var_lib_docker", float64(btrfsInfo["total"]), "btrfs_bytes_total")
+            collectdFormatter("var_lib_docker", float64(btrfsInfo["allocated"]), "btrfs_bytes_allocated")
+            collectdFormatter("var_lib_docker", float64(btrfsInfo["used"]), "btrfs_bytes_used")
+        } else if *modePtr == "introscope"{
+            log.Fatal("Feature coming soon")
+        }else {
+            log.Fatal("Logging mode not yet available")
+        }
+    
     } else {
         log.Fatal("BTRFS is not being used by the docker daemon")
         os.Exit(1)
